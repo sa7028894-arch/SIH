@@ -1,0 +1,30 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "FastAPI backend application"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.8.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.28.0",
+    "opencv-python>=4.10.0",
+    "pytesseract>=0.3.10",
+    "passporteye>=2.2.0",
+    "numpy>=1.26.0",
+    "python-multipart>=0.0.9",
+    "pypdfium2>=4.30.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+]
