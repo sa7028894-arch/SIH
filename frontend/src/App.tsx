@@ -129,10 +129,10 @@ export default function App() {
                   <RefreshCw className="w-7 h-7 animate-spin" />
                 </div>
                 <h3 className="text-base font-semibold text-white mb-1">
-                  Processing Passport OCR & MRZ...
+                  Processing Passport OCR with Sarvam AI...
                 </h3>
                 <p className="text-xs text-slate-400 max-w-xs">
-                  Running PassportEye extraction, checksum verification, and OpenCV fallback on {selectedFile?.name}.
+                  Extracting structured passport fields using Sarvam Doc AI Vision on {selectedFile?.name}.
                 </p>
               </div>
             ) : (
@@ -210,10 +210,10 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-lg text-white">
                       {result.mrz_detected && result.data?.mrz_valid
-                        ? 'MRZ Validated'
+                        ? 'Passport Extracted'
                         : result.mrz_detected
-                        ? 'MRZ Detected (Low Confidence)'
-                        : 'No MRZ Detected'}
+                        ? 'Passport Extracted (Low Confidence)'
+                        : 'No Passport Data Detected'}
                     </h3>
                     <span
                       className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
@@ -310,77 +310,108 @@ export default function App() {
                       {cleanDisplayValue(result.data.expiry_date)}
                     </p>
                   </div>
+
+                  {/* Date of Issue (if available) */}
+                  {result.data.date_of_issue && (
+                    <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 mb-1">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                        DATE OF ISSUE
+                      </div>
+                      <p className="text-sm font-semibold text-white font-mono">
+                        {cleanDisplayValue(result.data.date_of_issue)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Place of Issue (if available) */}
+                  {result.data.place_of_issue && (
+                    <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 mb-1">
+                        <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                        PLACE OF ISSUE
+                      </div>
+                      <p className="text-sm font-semibold text-white">
+                        {cleanDisplayValue(result.data.place_of_issue)}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Check Digit Status Pills */}
-                <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80">
-                  <div className="text-[11px] font-medium text-slate-400 uppercase mb-2.5">
-                    ICAO 9303 Check Digit Validations
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
-                        result.data.check_digits.number
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                      }`}
-                    >
-                      {result.data.check_digits.number ? (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5" />
-                      )}
-                      Document Number
-                    </span>
+                {/* Check Digit Status Pills (rendered only if checksum validation was performed) */}
+                {result.data.check_digits &&
+                  (result.data.check_digits.number !== null ||
+                    result.data.check_digits.date_of_birth !== null ||
+                    result.data.check_digits.expiration_date !== null) && (
+                    <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80">
+                      <div className="text-[11px] font-medium text-slate-400 uppercase mb-2.5">
+                        ICAO 9303 Check Digit Validations
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
+                            result.data.check_digits.number
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                          }`}
+                        >
+                          {result.data.check_digits.number ? (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5" />
+                          )}
+                          Document Number
+                        </span>
 
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
-                        result.data.check_digits.date_of_birth
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                      }`}
-                    >
-                      {result.data.check_digits.date_of_birth ? (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5" />
-                      )}
-                      Date of Birth
-                    </span>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
+                            result.data.check_digits.date_of_birth
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                          }`}
+                        >
+                          {result.data.check_digits.date_of_birth ? (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5" />
+                          )}
+                          Date of Birth
+                        </span>
 
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
-                        result.data.check_digits.expiration_date
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                      }`}
-                    >
-                      {result.data.check_digits.expiration_date ? (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5" />
-                      )}
-                      Expiration Date
-                    </span>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
+                            result.data.check_digits.expiration_date
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                          }`}
+                        >
+                          {result.data.check_digits.expiration_date ? (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5" />
+                          )}
+                          Expiration Date
+                        </span>
 
-                    {result.data.check_digits.composite !== null && (
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
-                          result.data.check_digits.composite
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                        }`}
-                      >
-                        {result.data.check_digits.composite ? (
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        ) : (
-                          <XCircle className="w-3.5 h-3.5" />
+                        {result.data.check_digits.composite !== null && (
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border ${
+                              result.data.check_digits.composite
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            }`}
+                          >
+                            {result.data.check_digits.composite ? (
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            ) : (
+                              <XCircle className="w-3.5 h-3.5" />
+                            )}
+                            Composite Checksum
+                          </span>
                         )}
-                        Composite Checksum
-                      </span>
-                    )}
-                  </div>
-                </div>
+                      </div>
+                    </div>
+                  )}
 
                 {/* Raw MRZ Lines */}
                 {result.data.raw_text && (

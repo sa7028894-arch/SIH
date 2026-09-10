@@ -12,15 +12,14 @@ router = APIRouter()
     summary="Validate Passport Media",
     description=(
         "Accepts a passport image (JPG, PNG, WEBP, TIFF) or PDF document, "
-        "extracts the Machine Readable Zone (MRZ) using PassportEye and OpenCV, "
-        "validates ICAO 9303 checksums, and returns parsed identity data."
+        "and extracts structured identity fields and MRZ using Sarvam AI Document AI."
     ),
 )
 async def validate_passport(
     file: UploadFile = File(..., description="Passport image or PDF document file")
 ) -> PassportValidationResponse:
     """
-    View / Endpoint handler for passport MRZ validation.
-    Delegates OCR processing and extraction logic to the PassportController.
+    View / Endpoint handler for passport media validation.
+    Delegates extraction logic to PassportController and SarvamDocAIService.
     """
     return await PassportController.validate_passport_media(file)

@@ -1,8 +1,13 @@
 import json
 import os
+from pathlib import Path
 from typing import List, Union
 from dotenv import load_dotenv
 
+# Ensure .env in backend directory or parent directories is resolved
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
 load_dotenv()
 
 class Settings:
@@ -11,6 +16,12 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "true").lower() in ("true", "1", "t")
     HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", "8000"))
+
+    # Sarvam AI Document AI Configurations
+    SARVAM_API_KEY: str = os.getenv("SARVAM_API_KEY", "")
+    SARVAM_BASE_URL: str = os.getenv("SARVAM_BASE_URL", "https://api.sarvam.ai")
+    SARVAM_POLL_INTERVAL: float = float(os.getenv("SARVAM_POLL_INTERVAL", "1.0"))
+    SARVAM_TIMEOUT_SECONDS: int = int(os.getenv("SARVAM_TIMEOUT_SECONDS", "45"))
 
     @property
     def BACKEND_CORS_ORIGINS(self) -> List[str]:

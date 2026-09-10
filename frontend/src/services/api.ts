@@ -32,6 +32,14 @@ export interface MRZData {
   mrz_type?: string | null;
   country?: string | null;
   raw_text?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  date_of_issue?: string | null;
+  place_of_issue?: string | null;
+  country_code?: string | null;
+  passport_number?: string | null;
+  dob?: string | null;
+  mrz?: string | null;
   extraction_method: string;
   check_digits: CheckDigitValidation;
 }

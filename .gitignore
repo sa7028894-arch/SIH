@@ -26,3 +26,6 @@ venv/
 *.njsproj
 *.sln
 *.sw?
+midv500_sample
+samples
+download.py
