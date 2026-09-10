@@ -28,6 +28,37 @@ PASSPORT_EXTRACTION_SCHEMA = {
     },
 }
 
+EVISA_EXTRACTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "dob": {"description": "Date of birth of the visa holder", "type": "string"},
+        "entry_validation": {"description": "Entry validation, validity period or expiry date of the visa", "type": "string"},
+        "first_name": {"description": "First name or given names of the visa holder", "type": "string"},
+        "last_name": {"description": "Last name or surname of the visa holder", "type": "string"},
+        "nationality": {"description": "Nationality of the visa holder", "type": "string"},
+        "passport_expiration_date": {"description": "Expiration date of the associated passport", "type": "string"},
+        "passport_issue_date": {"description": "Issue date of the associated passport", "type": "string"},
+        "passport_issuing_country": {"description": "Country that issued the passport", "type": "string"},
+        "passport_number": {"description": "Passport number associated with the visa", "type": "string"},
+        "place_of_birth": {"description": "Place or city of birth of the visa holder", "type": "string"},
+        "sex": {"description": "Sex or gender of the visa holder", "type": "string"},
+        "stay_duration": {"description": "Maximum permitted duration of stay", "type": "string"},
+        "visa_number": {"description": "E-visa document, sticker, or application number", "type": "string"},
+        "visa_type": {"description": "Type or category of visa (e.g., e-Tourist, e-Business)", "type": "string"},
+    },
+}
+
+AADHAAR_EXTRACTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "aadhaar_no": {"description": "12-digit Aadhaar card number", "type": "string"},
+        "dob": {"description": "Date of birth of the Aadhaar holder", "type": "string"},
+        "first_name": {"description": "First name or given names of the person", "type": "string"},
+        "last_name": {"description": "Last name or surname of the person", "type": "string"},
+        "sex": {"description": "Sex or gender of the person (Male/Female/Transgender)", "type": "string"},
+    },
+}
+
 
 class SarvamDocAIService:
     """
@@ -194,19 +225,22 @@ class SarvamDocAIService:
                 detail=f"Network error retrieving Sarvam results: {str(exc)}",
             )
 
-    async def extract_passport_data(
+    async def extract_document_data(
         self,
         file_bytes: bytes,
         filename: str,
         content_type: str = "application/pdf",
+        schema: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Complete end-to-end workflow: submits job, waits for completion, and returns parsed fields.
+        Generic end-to-end extraction workflow: submits job with custom schema,
+        waits for completion, and returns parsed fields.
         """
         job_id, init_status = await self.submit_job(
             file_bytes=file_bytes,
             filename=filename,
             content_type=content_type,
+            schema=schema,
         )
 
         final_status = await self.poll_job_status(job_id)
@@ -214,6 +248,54 @@ class SarvamDocAIService:
 
         results = await self.get_job_results(job_id)
         return self._normalize_extracted_fields(results)
+
+    async def extract_passport_data(
+        self,
+        file_bytes: bytes,
+        filename: str,
+        content_type: str = "application/pdf",
+    ) -> Dict[str, Any]:
+        """
+        Passport-specific extraction workflow using PASSPORT_EXTRACTION_SCHEMA.
+        """
+        return await self.extract_document_data(
+            file_bytes=file_bytes,
+            filename=filename,
+            content_type=content_type,
+            schema=PASSPORT_EXTRACTION_SCHEMA,
+        )
+
+    async def extract_evisa_data(
+        self,
+        file_bytes: bytes,
+        filename: str,
+        content_type: str = "application/pdf",
+    ) -> Dict[str, Any]:
+        """
+        E-Visa specific extraction workflow using EVISA_EXTRACTION_SCHEMA.
+        """
+        return await self.extract_document_data(
+            file_bytes=file_bytes,
+            filename=filename,
+            content_type=content_type,
+            schema=EVISA_EXTRACTION_SCHEMA,
+        )
+
+    async def extract_aadhaar_data(
+        self,
+        file_bytes: bytes,
+        filename: str,
+        content_type: str = "application/pdf",
+    ) -> Dict[str, Any]:
+        """
+        Aadhaar-specific extraction workflow using AADHAAR_EXTRACTION_SCHEMA.
+        """
+        return await self.extract_document_data(
+            file_bytes=file_bytes,
+            filename=filename,
+            content_type=content_type,
+            schema=AADHAAR_EXTRACTION_SCHEMA,
+        )
 
     def _normalize_extracted_fields(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """

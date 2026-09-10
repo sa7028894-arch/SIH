@@ -23,6 +23,10 @@ class Settings:
     SARVAM_POLL_INTERVAL: float = float(os.getenv("SARVAM_POLL_INTERVAL", "1.0"))
     SARVAM_TIMEOUT_SECONDS: int = int(os.getenv("SARVAM_TIMEOUT_SECONDS", "45"))
 
+    # Face Recognition Configurations
+    FACE_MATCH_THRESHOLD: float = float(os.getenv("FACE_MATCH_THRESHOLD", "1.10"))
+    WEIGHTS_DIR: str = os.getenv("WEIGHTS_DIR", str(Path(__file__).resolve().parent.parent / "models" / "weights"))
+
     @property
     def BACKEND_CORS_ORIGINS(self) -> List[str]:
         raw_origins = os.getenv("BACKEND_CORS_ORIGINS", "")

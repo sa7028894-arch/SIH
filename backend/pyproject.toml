@@ -17,6 +17,8 @@ dependencies = [
     "numpy>=1.26.0",
     "python-multipart>=0.0.9",
     "pypdfium2>=4.30.0",
+    "arcface>=0.0.8",
+    "tensorflow>=2.16.0",
 ]
 
 [build-system]
