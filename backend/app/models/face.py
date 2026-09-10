@@ -28,7 +28,7 @@ class FaceCompareResponse(BaseModel):
     success: bool = Field(..., description="Whether comparison was executed successfully")
     is_match: bool = Field(..., description="Whether both faces match within the threshold")
     similarity_score: float = Field(..., description="Estimated similarity percentage (0.0% to 100.0%)")
-    distance: float = Field(..., description="ArcFace embedding squared Euclidean distance")
+    distance: float = Field(..., description="OpenFace embedding Euclidean distance")
     threshold: float = Field(..., description="Distance threshold used for the match decision")
     message: str = Field(..., description="Detailed verification status or warning message")
     doc_face: Optional[ExtractedFace] = Field(default=None, description="Cropped face from reference document")

@@ -11,14 +11,12 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.28.0",
     "mrz>=0.6.2",
-    "opencv-python>=4.10.0",
+    "opencv-python>=4.10.0.84,<5.0.0",
     "pytesseract>=0.3.10",
     "passporteye>=2.2.0",
     "numpy>=1.26.0",
     "python-multipart>=0.0.9",
     "pypdfium2>=4.30.0",
-    "arcface>=0.0.8",
-    "tensorflow>=2.16.0",
 ]
 
 [build-system]

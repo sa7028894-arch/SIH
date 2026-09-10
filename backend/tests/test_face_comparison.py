@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 from app.main import app
 from app.models.face import BoundingBox, ExtractedFace, FaceCompareResponse, FaceExtractionResponse
 from app.services.face_detector import FaceDetectorService
-from app.services.arcface_service import ArcFaceService
+from app.services.openface_service import OpenFaceService
 from app.controllers.face_controller import FaceController
 from app.core.config import settings
 
@@ -62,45 +62,45 @@ def test_extract_face_from_bytes_blank():
 
 
 # ==========================================
-# Unit Tests: ArcFaceService
+# Unit Tests: OpenFaceService
 # ==========================================
 
-def test_arcface_preprocess():
-    """Test image resizing and normalization to [0, 1] range."""
+def test_openface_preprocess():
+    """Test image resizing to 96x96 blob and normalization to [0, 1] range."""
     raw = np.full((200, 150, 3), 255, dtype=np.uint8)
-    prep = ArcFaceService._preprocess_face(raw)
-    assert prep.shape == (112, 112, 3)
-    assert prep.dtype == np.float32
-    assert np.allclose(prep, 1.0, atol=1e-3)
+    blob = OpenFaceService._preprocess_face(raw)
+    assert blob.shape == (1, 3, 96, 96)
+    assert blob.dtype == np.float32
+    assert np.allclose(blob, 1.0, atol=1e-3)
 
 
-def test_arcface_compare_identical_faces():
+def test_openface_compare_identical_faces():
     """Comparing an image to itself must yield distance 0.0, similarity 100.0%, and is_match=True."""
-    dummy_face = np.random.randint(0, 256, (112, 112, 3), dtype=np.uint8)
-    is_match, sim, dist = ArcFaceService.compare_faces(dummy_face, dummy_face)
+    dummy_face = np.random.randint(0, 256, (96, 96, 3), dtype=np.uint8)
+    is_match, sim, dist = OpenFaceService.compare_faces(dummy_face, dummy_face)
 
     assert is_match is True
     assert dist == pytest.approx(0.0, abs=1e-4)
     assert sim == pytest.approx(100.0, abs=0.1)
 
 
-def test_arcface_compare_different_faces():
+def test_openface_compare_different_faces():
     """Comparing different images should produce positive distance and proper similarity score."""
-    face1 = np.zeros((112, 112, 3), dtype=np.uint8)
-    face2 = np.full((112, 112, 3), 255, dtype=np.uint8)
-    is_match, sim, dist = ArcFaceService.compare_faces(face1, face2)
+    face1 = np.zeros((96, 96, 3), dtype=np.uint8)
+    face2 = np.full((96, 96, 3), 255, dtype=np.uint8)
+    is_match, sim, dist = OpenFaceService.compare_faces(face1, face2)
 
     assert dist > 0.0
     assert 0.0 <= sim <= 100.0
     assert isinstance(is_match, bool)
 
 
-def test_arcface_compute_embedding():
-    """compute_embedding should return a normalized 192-dimensional vector."""
-    dummy = np.full((112, 112, 3), 100, dtype=np.uint8)
-    emb = ArcFaceService.compute_embedding(dummy)
+def test_openface_compute_embedding():
+    """compute_embedding should return a normalized 128-dimensional vector."""
+    dummy = np.full((96, 96, 3), 100, dtype=np.uint8)
+    emb = OpenFaceService.compute_embedding(dummy)
     assert emb is not None
-    assert emb.shape == (192,)
+    assert emb.shape == (128,)
     # Embedding must be L2 normalized (norm close to 1.0)
     norm = np.linalg.norm(emb)
     assert norm == pytest.approx(1.0, abs=1e-3)

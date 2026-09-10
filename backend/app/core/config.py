@@ -24,7 +24,8 @@ class Settings:
     SARVAM_TIMEOUT_SECONDS: int = int(os.getenv("SARVAM_TIMEOUT_SECONDS", "45"))
 
     # Face Recognition Configurations
-    FACE_MATCH_THRESHOLD: float = float(os.getenv("FACE_MATCH_THRESHOLD", "1.10"))
+    FACE_MATCH_THRESHOLD: float = float(os.getenv("FACE_MATCH_THRESHOLD", "0.75"))
+    OPENFACE_MODEL_NAME: str = os.getenv("OPENFACE_MODEL_NAME", "openface_nn4.small2.v1.t7")
     WEIGHTS_DIR: str = os.getenv("WEIGHTS_DIR", str(Path(__file__).resolve().parent.parent / "models" / "weights"))
 
     @property

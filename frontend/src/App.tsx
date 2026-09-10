@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   UploadCloud,
   FileText,
@@ -77,6 +77,14 @@ export default function App() {
     return 'Face Comparison';
   };
 
+  const setVideoRef = (video: HTMLVideoElement | null) => {
+    videoRef.current = video;
+    if (video && streamRef.current) {
+      video.srcObject = streamRef.current;
+      video.play().catch((err) => console.warn('Camera video play interrupted:', err));
+    }
+  };
+
   const startCamera = async () => {
     setCameraError(null);
     try {
@@ -85,11 +93,11 @@ export default function App() {
         audio: false,
       });
       streamRef.current = stream;
+      setIsCameraActive(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.play().catch((err) => console.warn('Camera video play interrupted:', err));
       }
-      setIsCameraActive(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Unable to access camera';
       setCameraError(msg);
@@ -98,12 +106,26 @@ export default function App() {
   };
 
   const stopCamera = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     setIsCameraActive(false);
   };
+
+  // Clean up camera stream if component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
 
   const capturePhoto = () => {
     if (!videoRef.current) return;
@@ -359,7 +381,7 @@ export default function App() {
             <div className="text-center mb-1">
               <h2 className="text-base sm:text-lg font-bold text-white flex items-center justify-center gap-2">
                 <ScanFace className="w-5 h-5 text-indigo-400" />
-                Real-Time Face Match (ArcFace)
+                Real-Time Face Match (OpenFace)
               </h2>
               <p className="text-xs text-slate-400 mt-1">
                 Provide a reference photo and compare it against a live camera snapshot in real time.
@@ -455,7 +477,7 @@ export default function App() {
 
                 {isCameraActive ? (
                   <div className="relative w-full h-44 rounded-xl overflow-hidden bg-black flex items-center justify-center">
-                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+                    <video ref={setVideoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-24 h-32 border-2 border-dashed border-emerald-400/80 rounded-full" />
                     </div>
@@ -517,7 +539,7 @@ export default function App() {
                 {isComparingFaces ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Extracting & Comparing with ArcFace...
+                    Extracting & Comparing with OpenFace...
                   </>
                 ) : (
                   <>
@@ -528,7 +550,7 @@ export default function App() {
               </button>
               {(!docFaceFile || !liveFaceFile) && (
                 <p className="text-[10px] text-slate-500 mt-2">
-                  Provide both reference photo and live picture to run ArcFace comparison.
+                  Provide both reference photo and live picture to run OpenFace comparison.
                 </p>
               )}
             </div>
@@ -1298,10 +1320,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Match Score & ArcFace Metrics */}
+            {/* Match Score & OpenFace Metrics */}
             <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-300">ArcFace Similarity Score</span>
+                <span className="text-xs font-semibold text-slate-300">OpenFace Similarity Score</span>
                 <span
                   className={`text-sm font-bold font-mono ${
                     faceCompareResult.is_match ? 'text-emerald-400' : 'text-rose-400'

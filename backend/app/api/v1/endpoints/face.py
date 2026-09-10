@@ -28,12 +28,12 @@ async def extract_face(
     response_model=FaceCompareResponse,
     status_code=status.HTTP_200_OK,
     summary="Compare Document Face vs Live Face",
-    description="Extracts faces from reference document and live webcam capture, then computes ArcFace embeddings and distance/similarity.",
+    description="Extracts faces from reference document and live webcam capture, then computes OpenFace embeddings and distance/similarity.",
 )
 async def compare_faces(
     document_file: UploadFile = File(..., description="Reference document PDF or image"),
     live_file: UploadFile = File(..., description="Live camera snapshot or selfie image"),
-    threshold: Optional[float] = Form(default=None, description="Optional match distance threshold (default: 1.10)"),
+    threshold: Optional[float] = Form(default=None, description="Optional match distance threshold (default: 0.75)"),
 ) -> FaceCompareResponse:
     """
     Endpoint handler for real-time face comparison.

@@ -9,7 +9,7 @@ from app.models.face import (
     FaceCompareResponse,
 )
 from app.services.face_detector import FaceDetectorService
-from app.services.arcface_service import ArcFaceService
+from app.services.openface_service import OpenFaceService
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +130,8 @@ class FaceController:
                     live_face=live_face,
                 )
 
-            # 3. Compute ArcFace embeddings and compare
-            is_match, similarity_score, distance = ArcFaceService.compare_faces(
+            # 3. Compute OpenFace embeddings and compare
+            is_match, similarity_score, distance = OpenFaceService.compare_faces(
                 doc_crop,
                 live_crop,
                 threshold=match_threshold,
