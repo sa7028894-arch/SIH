@@ -1,0 +1,37 @@
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - path: backend/.env
+        required: false
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      DEBUG: "true"
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+    expose:
+      - "8000"
+    networks:
+      - sih-net
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: ""
+      VITE_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - sih-net
+
+networks:
+  sih-net:
+    name: sih-net
