@@ -21,6 +21,8 @@ import {
   Fingerprint,
   Camera,
   ScanFace,
+  Layers,
+  Info,
 } from 'lucide-react';
 import {
   api,
@@ -28,6 +30,7 @@ import {
   type EVisaValidationResponse,
   type AadhaarValidationResponse,
   type FaceCompareResponse,
+  type ElaAnalysisResponse,
 } from './services/api';
 
 function cleanDisplayValue(val?: string | null): string {
@@ -45,13 +48,14 @@ function formatSex(val?: string | null): string {
 }
 
 export default function App() {
-  const [docType, setDocType] = useState<'passport' | 'evisa' | 'aadhaar' | 'face'>('passport');
+  const [docType, setDocType] = useState<'passport' | 'evisa' | 'aadhaar' | 'face' | 'ela'>('passport');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passportResult, setPassportResult] = useState<PassportValidationResponse | null>(null);
   const [evisaResult, setEVisaResult] = useState<EVisaValidationResponse | null>(null);
   const [aadhaarResult, setAadhaarResult] = useState<AadhaarValidationResponse | null>(null);
+  const [elaResult, setElaResult] = useState<ElaAnalysisResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -74,7 +78,8 @@ export default function App() {
     if (docType === 'passport') return 'Passport';
     if (docType === 'evisa') return 'E-Visa';
     if (docType === 'aadhaar') return 'Aadhaar Card';
-    return 'Face Comparison';
+    if (docType === 'face') return 'Face Comparison';
+    return 'Tamper Detection (ELA)';
   };
 
   const setVideoRef = (video: HTMLVideoElement | null) => {
@@ -169,6 +174,7 @@ export default function App() {
     setPassportResult(null);
     setEVisaResult(null);
     setAadhaarResult(null);
+    setElaResult(null);
 
     try {
       if (docType === 'passport') {
@@ -180,6 +186,9 @@ export default function App() {
       } else if (docType === 'aadhaar') {
         const response = await api.validateAadhaar(file);
         setAadhaarResult(response);
+      } else if (docType === 'ela') {
+        const response = await api.analyzeEla(file);
+        setElaResult(response);
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -217,6 +226,7 @@ export default function App() {
     setPassportResult(null);
     setEVisaResult(null);
     setAadhaarResult(null);
+    setElaResult(null);
     setErrorMessage(null);
     setIsLoading(false);
     stopCamera();
@@ -240,14 +250,14 @@ export default function App() {
   const hasResult =
     docType === 'face'
       ? Boolean(faceCompareResult)
-      : Boolean(passportResult || evisaResult || aadhaarResult);
+      : Boolean(passportResult || evisaResult || aadhaarResult || elaResult);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-8 selection:bg-indigo-500 selection:text-white">
       <div className="w-full max-w-2xl flex flex-col gap-6">
         {/* Document Type Selector Tabs */}
         {!hasResult && (
-          <div className="flex items-center justify-center p-1 bg-slate-900/80 border border-slate-800 rounded-2xl w-full max-w-md mx-auto">
+          <div className="flex items-center justify-center p-1 bg-slate-900/80 border border-slate-800 rounded-2xl w-full max-w-xl mx-auto overflow-x-auto">
             <button
               onClick={() => {
                 setDocType('passport');
@@ -301,6 +311,20 @@ export default function App() {
               <ScanFace className="w-3.5 h-3.5" />
               Face Match
             </button>
+            <button
+              onClick={() => {
+                setDocType('ela');
+                resetUpload();
+              }}
+              className={`flex-1 py-2 px-2 sm:px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1 ${
+                docType === 'ela'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Tamper (ELA)
+            </button>
           </div>
         )}
 
@@ -339,10 +363,14 @@ export default function App() {
                   <RefreshCw className="w-7 h-7 animate-spin" />
                 </div>
                 <h3 className="text-base font-semibold text-white mb-1">
-                  Processing {getDocTypeName()} with Sarvam AI...
+                  {docType === 'ela'
+                    ? 'Running Error Level Analysis...'
+                    : `Processing ${getDocTypeName()} with Sarvam AI...`}
                 </h3>
                 <p className="text-xs text-slate-400 max-w-xs">
-                  Extracting structured fields using Sarvam Doc AI Vision on {selectedFile?.name}.
+                  {docType === 'ela'
+                    ? `Comparing compression error levels across photo and background on ${selectedFile?.name}.`
+                    : `Extracting structured fields using Sarvam Doc AI Vision on ${selectedFile?.name}.`}
                 </p>
               </div>
             ) : (
@@ -1366,6 +1394,206 @@ export default function App() {
                     {faceCompareResult.is_match ? 'Verified Same Person' : 'Different Identity'}
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ELA Tamper Analysis Result Card */}
+        {elaResult && (
+          <div className="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl animate-in fade-in flex flex-col gap-6">
+            {/* Header & Status Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                    elaResult.is_suspicious
+                      ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  }`}
+                >
+                  {elaResult.is_suspicious ? (
+                    <ShieldAlert className="w-6 h-6" />
+                  ) : (
+                    <ShieldCheck className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-bold text-white">
+                      {elaResult.is_suspicious
+                        ? 'Potential Photo Tampering Detected'
+                        : 'Compression Levels Consistent (Authentic)'}
+                    </h2>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                        elaResult.is_suspicious
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                          : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      }`}
+                    >
+                      {elaResult.is_suspicious ? 'SUSPICIOUS' : 'PASS'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {elaResult.filename} &bull; {elaResult.message}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={resetUpload}
+                className="self-start sm:self-center px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-md"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Analyze Another
+              </button>
+            </div>
+
+            {/* Re-encoding disclaimer alert if source was not JPEG */}
+            {elaResult.source_reencoded && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Non-JPEG Source:</strong> This document was provided as PNG, WebP, or PDF. ELA is most decisive on native camera/scanner JPEGs. Results here are indicative.
+                </p>
+              </div>
+            )}
+
+            {/* Metrics KPI Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+                  ELA Ratio
+                </span>
+                <span
+                  className={`text-lg font-bold font-mono ${
+                    elaResult.is_suspicious ? 'text-rose-400' : 'text-emerald-400'
+                  }`}
+                >
+                  {elaResult.ratio.toFixed(2)}x
+                </span>
+                <span className="text-[10px] text-slate-500 mt-0.5">
+                  Threshold: {elaResult.threshold.toFixed(2)}x
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+                  Photo ELA Mean
+                </span>
+                <span className="text-lg font-bold font-mono text-white">
+                  {elaResult.photo_ela_mean.toFixed(2)}
+                </span>
+                <span className="text-[10px] text-slate-500 mt-0.5">
+                  Portrait ROI intensity
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+                  Background ELA
+                </span>
+                <span className="text-lg font-bold font-mono text-white">
+                  {elaResult.background_ela_mean.toFixed(2)}
+                </span>
+                <span className="text-[10px] text-slate-500 mt-0.5">
+                  Doc background ROI
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+                  Face Detection
+                </span>
+                <span
+                  className={`text-sm font-semibold mt-1 flex items-center gap-1.5 ${
+                    elaResult.face_detected ? 'text-emerald-400' : 'text-amber-400'
+                  }`}
+                >
+                  {elaResult.face_detected ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Portrait Found
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4" />
+                      No Face Found
+                    </>
+                  )}
+                </span>
+                <span className="text-[10px] text-slate-500 mt-0.5">
+                  {elaResult.face_detected ? 'YuNet extracted face' : 'Fallback full scan'}
+                </span>
+              </div>
+            </div>
+
+            {/* Visual Inspector: ROI Overlay vs ELA Heatmap */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-indigo-400" />
+                  Visual Analysis & Heatmap
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Cyan Box: Photo ROI &bull; Magenta Box: Background ROI
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* ROI Overlay */}
+                <div className="flex flex-col gap-2 bg-slate-950/80 border border-slate-800 rounded-2xl p-3">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-semibold text-slate-300">
+                      Document Regions of Interest
+                    </span>
+                    <span className="text-[10px] text-cyan-400 font-mono">Original + Bounding Boxes</span>
+                  </div>
+                  <div className="relative w-full h-56 sm:h-64 rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center border border-slate-800/80">
+                    {elaResult.overlay_base64 ? (
+                      <img
+                        src={elaResult.overlay_base64}
+                        alt="Document ROI Overlay"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-500">Overlay unavailable</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* ELA Heatmap */}
+                <div className="flex flex-col gap-2 bg-slate-950/80 border border-slate-800 rounded-2xl p-3">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-semibold text-slate-300">
+                      ELA Compression Heatmap
+                    </span>
+                    <span className="text-[10px] text-amber-400 font-mono">Recompression Artifacts</span>
+                  </div>
+                  <div className="relative w-full h-56 sm:h-64 rounded-xl overflow-hidden bg-black flex items-center justify-center border border-slate-800/80">
+                    {elaResult.heatmap_base64 ? (
+                      <img
+                        src={elaResult.heatmap_base64}
+                        alt="ELA Compression Heatmap"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-500">Heatmap unavailable</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Heuristic Explainer Note */}
+            <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/60 text-slate-400 text-xs flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-medium text-slate-300">How Error Level Analysis Works</p>
+                <p className="text-[11px] leading-relaxed">
+                  When an image is saved as a JPEG, each 8x8 pixel block is compressed at a specific error rate. If a photo has been digitally spliced into a document from another source, its compression signature will not match the document background. A ratio above the threshold ({elaResult.threshold.toFixed(2)}x) indicates the portrait area has higher error variance and may have been replaced or altered.
+                </p>
               </div>
             </div>
           </div>

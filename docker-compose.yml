@@ -8,12 +8,13 @@ services:
       HOST: "0.0.0.0"
       PORT: "8000"
       DEBUG: "true"
+      PYTHONDONTWRITEBYTECODE: "1"
       BACKEND_CORS_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
     volumes:
       - ./backend:/app
       - /app/.venv
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     networks:
       - sih-net
 

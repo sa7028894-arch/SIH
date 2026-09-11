@@ -136,6 +136,23 @@ export interface FaceCompareResponse {
   live_face?: ExtractedFace | null;
 }
 
+export interface ElaAnalysisResponse {
+  success: boolean;
+  is_suspicious: boolean;
+  face_detected: boolean;
+  photo_ela_mean: number;
+  background_ela_mean: number;
+  ratio: number;
+  threshold: number;
+  source_reencoded: boolean;
+  message: string;
+  filename: string;
+  heatmap_base64?: string | null;
+  overlay_base64?: string | null;
+  photo_bbox?: BoundingBox | null;
+  background_bbox?: BoundingBox | null;
+}
+
 export const api = {
   async getRoot(): Promise<RootMessage> {
     const res = await fetch(`${API_BASE_URL}/`);
@@ -262,6 +279,31 @@ export const api = {
     }
 
     const res = await fetch(`${API_BASE_URL}/api/v1/face-compare`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      let detailMsg = `Request failed (${res.status} ${res.statusText})`;
+      try {
+        const errorData = await res.json();
+        if (errorData.detail) {
+          detailMsg = errorData.detail;
+        }
+      } catch {
+        // use fallback message
+      }
+      throw new Error(detailMsg);
+    }
+
+    return res.json();
+  },
+
+  async analyzeEla(file: File): Promise<ElaAnalysisResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/ela-analysis`, {
       method: 'POST',
       body: formData,
     });
