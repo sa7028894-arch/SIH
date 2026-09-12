@@ -1,10 +1,10 @@
-# Node / Frontend
+
 node_modules/
 dist/
 dist-ssr/
 *.local
 
-# Python / Backend
+
 __pycache__/
 *.py[cod]
 .venv/
@@ -14,10 +14,10 @@ venv/
 .pytest_cache/
 .mypy_cache/
 
-# Environment files
+
 .env
 
-# Editor & OS
+
 .DS_Store
 .vscode/
 .idea/
