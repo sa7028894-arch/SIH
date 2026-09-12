@@ -40,8 +40,6 @@ cd backend
 
 source .venv/bin/activate
 
-# (Optional) If setting up on a fresh machine:
-# uv venv .venv && source .venv/bin/activate && uv pip install -r requirements.txt
 
 
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
