@@ -122,7 +122,7 @@ export default function App() {
     setIsCameraActive(false);
   };
 
-  // Clean up camera stream if component unmounts
+ 
   useEffect(() => {
     return () => {
       if (streamRef.current) {
