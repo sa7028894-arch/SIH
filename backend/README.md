@@ -6,7 +6,7 @@ FastAPI backend application with modular routing, environment settings, and CORS
 
 ### 1. Activate Virtual Environment
 ```bash
-# Using existing venv
+
 source .venv/bin/activate
 ```
 
