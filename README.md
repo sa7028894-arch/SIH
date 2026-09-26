@@ -47,9 +47,6 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Health Check Endpoint**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
----
-
-### 2. Run Frontend (React + Vite)
 
 In a separate terminal, navigate to `frontend/`:
 
