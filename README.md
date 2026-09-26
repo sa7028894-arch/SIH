@@ -2,7 +2,6 @@
 
 Fullstack monorepo featuring a React single-page application and a FastAPI backend.
 
-```
 .
 ├── backend/                  # FastAPI Application
 │   ├── app/
@@ -24,9 +23,8 @@ Fullstack monorepo featuring a React single-page application and a FastAPI backe
 │   └── vite.config.ts
 │
 └── README.md
-```
 
----
+
 
 ## Getting Started
 
@@ -43,7 +41,7 @@ source .venv/bin/activate
 
 
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+
 
 - **Backend API**: [http://localhost:8000](http://localhost:8000)
 - **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
@@ -67,7 +65,6 @@ npm run dev
 
 - **Frontend App**: [http://localhost:5173](http://localhost:5173)
 
----
 
 ## Verification & Testing
 
@@ -79,4 +76,4 @@ npm run dev
 - **Test Backend Import**:
   ```bash
   cd backend && .venv/bin/python -c "from app.main import app; print('Backend OK!')"
-  ```
+  
