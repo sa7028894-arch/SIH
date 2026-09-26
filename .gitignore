@@ -4,7 +4,6 @@ dist/
 dist-ssr/
 *.local
 
-
 __pycache__/
 *.py[cod]
 .venv/
@@ -14,9 +13,7 @@ venv/
 .pytest_cache/
 .mypy_cache/
 
-
 .env
-
 
 .DS_Store
 .vscode/
